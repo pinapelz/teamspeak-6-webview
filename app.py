@@ -246,8 +246,19 @@ PAGE_TEMPLATE = """
     {% endif %}
 
     <div class="content-wrapper">
+        <section id="ajax-container" aria-live="polite">
+            {{ html_fragment|safe }}
+        </section>
+
+        {% if config.external_links %}
+        <nav class="footer-links">
+            {% for name, url in config.external_links.items() %}
+                <a href="{{ url }}" target="_blank" rel="noopener">{{ name }}</a>
+            {% endfor %}
+        </nav>
+        {% endif %}
+
         <header class="header">
-            <span class="eyebrow">TeamSpeak Server Status</span>
             <h1>{{ config.ui.title }}</h1>
             <p>{{ config.ui.subtitle }}</p>
             {% if is_online %}
@@ -260,17 +271,6 @@ PAGE_TEMPLATE = """
         <a href="ts3server://{{ config.server.ts_domain }}" class="btn-primary">{{ config.buttons.join }}</a>
         <p class="help-text">{{ config.buttons.download_text }} <a href="{{ config.buttons.download_url }}" target="_blank" rel="noopener">{{ config.buttons.download_link }}</a></p>
 
-        <section id="ajax-container" aria-live="polite">
-            {{ html_fragment|safe }}
-        </section>
-
-        {% if config.external_links %}
-        <nav class="footer-links">
-            {% for name, url in config.external_links.items() %}
-                <a href="{{ url }}" target="_blank" rel="noopener">{{ name }}</a>
-            {% endfor %}
-        </nav>
-        {% endif %}
 
         <footer class="credits">
             {{ config.footer.text }} <a href="{{ config.footer.author_url }}" target="_blank" rel="noopener">{{ config.footer.author }}</a> — Refresh scan: <span id="timer-text">{{ config.server.cache_time }}</span>s
