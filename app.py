@@ -105,10 +105,17 @@ def build_context():
     api_ping = round((time.perf_counter() - start_time) * 1000)
 
     raw_channels = ts_data.get("channels") or []
+    afk_count = None
     for channel in raw_channels:
-        channel["channel_name"] = channel.get("channel_name").replace("[Cspacer]", "")
+        original_name = channel.get("channel_name", "")
+        channel["is_spacer"] = "[Cspacer]" in original_name and "AFK" not in original_name
+        if "AFK" in original_name:
+            afk_count = channel.get("total_clients", None)
+        channel["channel_name"] = original_name.replace("[Cspacer]", "")
     raw_clients = ts_data.get("clients") or []
     is_online = bool(raw_channels)
+    if afk_count is not None:
+        afk_count = int(afk_count) - 1
 
     channels = sort_ts_channels(raw_channels, 0)
 
@@ -133,14 +140,23 @@ def build_context():
         "medium_stars": generate_stars(50, 0.6),
         "large_stars": generate_stars(15, 0.8),
         "total_real_clients": total_real_clients,
+        "afk_count": afk_count,
     }
 
 
 FRAGMENT_TEMPLATE = """
 {% if is_online %}
-    <div class="stat-item">
-        <span class="stat-label">Users Online</span>
-        <span class="stat-value">{{ total_real_clients }}</span>
+    <div class="server-stats">
+        <div class="stat-item">
+            <span class="stat-label">Users Online</span>
+            <span class="stat-value">{{ total_real_clients }}</span>
+        </div>
+        {% if afk_count is not none %}
+        <div class="stat-item">
+            <span class="stat-label">AFK Users</span>
+            <span class="stat-value">{{ afk_count }}</span>
+        </div>
+        {% endif %}
     </div>
     <div class="channel-list">
         {% for channel in channels %}
@@ -149,7 +165,6 @@ FRAGMENT_TEMPLATE = """
             {% set channel_clients = clients_by_channel.get(cid, []) %}
             {% set bg_img = config.channel_banners.get(c_name, config.generic_images.get('background', '')) %}
             {% set icon_img = config.channel_icons.get(c_name, config.generic_images.get('icon', '')) %}
-            {% set max_clients = channel.get('channel_maxclients') %}
 
             {% if bg_img %}
                 {% set bg_style = "background-image: linear-gradient(90deg, rgba(9, 18, 32, 0.96) 0%, rgba(9, 18, 32, 0.78) 45%, rgba(9, 18, 32, 0.94) 100%), url('" ~ safe_url(bg_img) ~ "');" %}
@@ -157,6 +172,7 @@ FRAGMENT_TEMPLATE = """
                 {% set bg_style = "" %}
             {% endif %}
 
+            {% if not channel.is_spacer %}
             <article class="channel">
                 <header class="channel-header" style="{{ bg_style }}">
                     <div class="channel-title-group">
@@ -166,15 +182,12 @@ FRAGMENT_TEMPLATE = """
                         <h2>{{ c_name }}</h2>
                     </div>
                     {# Only show client count for non-spacer channels #}
-                    {% if '[spacer' not in c_name %}
-                        <span class="channel-meta">
-                            {{ channel_clients|length }} / {{ '∞' if max_clients == -1 or max_clients == '-1' else max_clients }}
-                        </span>
-                    {% endif %}
+                    <span class="channel-meta">
+                        {{ channel_clients|length }}
+                    </span>
                 </header>
 
                 {# Only show client list for non-spacer channels #}
-                {% if '[spacer' not in c_name|lower and '[cspacer' not in c_name|lower and channel_clients %}
                     <ul class="client-list">
                         {% for client in channel_clients %}
                             <li class="client">
@@ -194,8 +207,8 @@ FRAGMENT_TEMPLATE = """
                             </li>
                         {% endfor %}
                     </ul>
-                {% endif %}
             </article>
+            {% endif %}
         {% endfor %}
     </div>
 {% else %}

@@ -42,16 +42,6 @@ body {
     color: var(--cl-white);
 }
 
-/* Neutralize the old space background elements */
-body::before,
-#space-bg,
-.star-layer,
-.stars-s,
-.stars-m,
-.stars-l {
-    display: none;
-}
-
 .app-container {
     position: relative;
     width: 100%;
@@ -111,7 +101,7 @@ body::before,
     color: var(--cl-white);
     font-size: 2.2rem;
     font-weight: bold;
-    magin-top: 20px;
+    margin-top: 25px
 }
 
 .header p {
@@ -154,12 +144,8 @@ body::before,
 
 .server-stats {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 1rem;
-    margin-bottom: 1.5rem;
-    padding: 1rem;
-    border: 2px solid var(--cl-gray-2);
-    background-color: var(--cl-gray-1);
 }
 
 .stat-item {
