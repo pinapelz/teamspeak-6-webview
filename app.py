@@ -1,5 +1,4 @@
 import json
-import random
 import time
 from pathlib import Path
 from urllib.parse import quote
@@ -29,14 +28,6 @@ ALLOWED_STATIC_EXTENSIONS = {
 def safe_url(filename):
     return quote(str(filename or ""), safe="/")
 
-
-def generate_stars(count, opacity):
-    shadows = []
-    for _ in range(count):
-        x = random.randint(0, 2000)
-        y = random.randint(0, 2000)
-        shadows.append(f"{x}px {y}px rgba(255, 255, 255, {opacity})")
-    return ", ".join(shadows)
 
 
 def fetch_teamspeak_data(cfg):
@@ -136,9 +127,6 @@ def build_context():
         "clients_by_channel": clients_by_channel,
         "is_online": is_online,
         "safe_url": safe_url,
-        "small_stars": generate_stars(150, 0.4),
-        "medium_stars": generate_stars(50, 0.6),
-        "large_stars": generate_stars(15, 0.8),
         "total_real_clients": total_real_clients,
         "afk_count": afk_count,
     }
@@ -234,22 +222,10 @@ PAGE_TEMPLATE = """
             --text-main: {{ config.ui.text_color }};
         }
 
-        {% if config.ui.enable_stars %}
-        .stars-s { box-shadow: {{ small_stars }}; }
-        .stars-m { box-shadow: {{ medium_stars }}; }
-        .stars-l { box-shadow: {{ large_stars }}; }
-        {% endif %}
     </style>
 </head>
 <body>
 
-{% if config.ui.enable_stars %}
-<div id="space-bg" aria-hidden="true">
-    <div class="star-layer stars-s"></div>
-    <div class="star-layer stars-m"></div>
-    <div class="star-layer stars-l"></div>
-</div>
-{% endif %}
 
 <main class="app-container">
     {% if is_online %}<div class="progress-bar" id="refresh-bar"></div>{% endif %}
