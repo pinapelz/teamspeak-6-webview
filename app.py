@@ -46,14 +46,38 @@ def fetch_teamspeak_data(cfg):
         clients_res = requests.get(f"{base_url}/clientlist?-groups", headers=headers, timeout=2)
         channels_json = channels_res.json()
         clients_json = clients_res.json()
-    except requests.RequestException:
+
+        client_list = clients_json.get("body") or []
+
+        for client in client_list:
+            clid = client.get("clid")
+            nickname = client.get("client_nickname")
+            if clid and nickname != "serveradmin":
+                client_info_res = requests.get(
+                    f"{base_url}/clientinfo?clid={clid}",
+                    headers=headers,
+                    timeout=2,
+                )
+                body = client_info_res.json().get("body")
+                if isinstance(body, list):
+                    client_info = body[0] if body else {}
+                else:
+                    client_info = {}
+                client["afk_text"] = client_info.get("client_away_message", "")
+                client["is_afk"] = client_info.get("client_away") == "1"
+                client["is_streaming"] = client_info.get("client_is_streaming") == "1"
+                client["stream_text"] = client_info.get("client_stream_text", "")
+
+    except requests.RequestException as e:
+        print(f"RequestException: failed to fetch client info: {e}")
         return {"channels": [], "clients": []}
-    except ValueError:
+    except ValueError as e:
+        print(f"ValueError: failed to parse client info: {e}")
         return {"channels": [], "clients": []}
 
     data = {
         "channels": channels_json.get("body") or [],
-        "clients": clients_json.get("body") or [],
+        "clients": client_list or [],
     }
 
     try:
@@ -100,6 +124,7 @@ def build_context():
     for channel in raw_channels:
         original_name = channel.get("channel_name", "")
         channel["is_spacer"] = "[Cspacer]" in original_name and "AFK" not in original_name
+        # Channels with the keyword "AFK" count all connected clients as AFK regardless of status
         if "AFK" in original_name:
             afk_count = channel.get("total_clients", None)
         channel["channel_name"] = original_name.replace("[Cspacer]", "")
@@ -107,6 +132,8 @@ def build_context():
     is_online = bool(raw_channels)
     if afk_count is not None:
         afk_count = int(afk_count) - 1
+    else:
+        afk_count = 0
 
     channels = sort_ts_channels(raw_channels, 0)
 
@@ -117,6 +144,8 @@ def build_context():
         for client in raw_clients:
             if int(client.get("client_type") or 0) == 1:
                 continue
+            if client.get("is_afk"):
+                afk_count += 1
             clients_by_channel.setdefault(str(client.get("cid")), []).append(client)
             total_real_clients += 1
 
@@ -136,7 +165,7 @@ FRAGMENT_TEMPLATE = """
 {% if is_online %}
     <div class="server-stats">
         <div class="stat-item">
-            <span class="stat-label">Users Online</span>
+            <span class="stat-label">Users Connected</span>
             <span class="stat-value">{{ total_real_clients }}</span>
         </div>
         {% if afk_count is not none %}
@@ -191,7 +220,13 @@ FRAGMENT_TEMPLATE = """
                                 {% else %}
                                     <span class="client-no-role-icon"></span>
                                 {% endif %}
-                                <span>{{ client.get('client_nickname', '') }}</span>
+                                <span class="client-name">{{ client.get('client_nickname', '') }}</span>
+                                {% if client.get('is_afk') %}
+                                    <span class="client-afk">(AFK{% if client.get('afk_text') %}: {{ client.get('afk_text') }}{% endif %})</span>
+                                {% endif %}
+                                {% if client.get('is_streaming') %}
+                                    <span class="client-stream">(Streaming{% if client.get('stream_text') %}: {{ client.get('stream_text') }}{% endif %})</span>
+                                {% endif %}
                             </li>
                         {% endfor %}
                     </ul>

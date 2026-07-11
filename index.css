@@ -300,9 +300,22 @@ body {
     border-color: var(--cl-gray-4);
 }
 
+
 .role-icon,
 .client-no-role-icon {
     display: none;
+}
+
+.client-afk {
+    color: var(--cl-red-6);
+    font-size: 0.85rem;
+    margin-left: 0.5rem;
+}
+
+.client-stream {
+    color: var(--cl-blue-6);
+    font-size: 0.85rem;
+    margin-left: 0.5rem;
 }
 
 .empty-server {
