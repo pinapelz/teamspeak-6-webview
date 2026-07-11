@@ -1,25 +1,28 @@
 """TeamSpeak Web Explorer configuration."""
 
 from pathlib import Path
+from dotenv import load_dotenv
+import os
+load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent
 
 CONFIG = {
     # Server connection settings
     "server": {
-        "host": "chat.moekyun.me",  # Server IP or hostname, e.g. 192.168.1.50
-        "port": "8443",  # HTTP WebQuery port (TS6)
-        "api_key": "",
-        "server_id": "1",
-        "ts_domain": "chat.moekyun.me",  # Used by the connect button
+        "host": os.environ.get("TS_HOST", ""),  # Server IP or hostname, e.g. 192.168.1.50
+        "port": os.environ.get("TS_WEBQUERY_PORT", "8443"),  # HTTP WebQuery port (TS6)
+        "api_key": os.environ.get("TS_API_KEY", ""),
+        "server_id": os.environ.get("TS_SERVER_ID", "1"),
+        "ts_domain": os.environ.get("TS_HOST", ""),  # Used by the connect button
         "cache_time": 30,  # Refresh interval in seconds (anti-spam)
         "cache_file": BASE_DIR / "cache.json",
     },
 
     # Main design and copy
     "ui": {
-        "title": "Overwatch Diddly Server",
-        "subtitle": "Jump into voice, organize channels, and see who is online.",
+        "title": "",
+        "subtitle": "",
         "background_color": "#07111f",  # Main background color
         "panel_color": "#101b2d",  # Main panel and channel block color
         "accent_color": "#2589ff",  # Buttons, highlights, and refresh timer
