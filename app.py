@@ -49,9 +49,14 @@ def fetch_teamspeak_data(cfg):
 
         client_list = clients_json.get("body") or []
 
+        afk_threshold = cfg.get("afk_status_max_clients")
+        fetch_afk_status = afk_threshold is None or len(client_list) <= afk_threshold
+
         for client in client_list:
             clid = client.get("clid")
             nickname = client.get("client_nickname")
+            if not fetch_afk_status:
+                continue
             if clid and nickname != "serveradmin":
                 client_info_res = requests.get(
                     f"{base_url}/clientinfo?clid={clid}",

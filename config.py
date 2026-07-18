@@ -17,6 +17,7 @@ CONFIG = {
         "ts_domain": os.environ.get("TS_HOST", ""),  # Used by the connect button
         "cache_time": 30,  # Refresh interval in seconds (anti-spam)
         "cache_file": BASE_DIR / "cache.json",
+        "afk_status_max_clients": 3,  # Skip per-client clientinfo (AFK/streaming) calls when client count exceeds this (due to potential rate limits)
     },
 
     # Main design and copy
