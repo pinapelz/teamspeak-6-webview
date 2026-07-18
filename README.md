@@ -12,3 +12,4 @@ uv run app.py
 - Spacer channels are hidden
 - Channels with the text `AFK` are shown, the number of users in this channel is used as the AFK users indicator
 - Edit and configure `config.py` for all other non-essential settings
+- Images in `config.py` are referenced based on the root of this repo
